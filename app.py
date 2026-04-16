@@ -48,10 +48,13 @@ def build_navbar(current_path: str = "/") -> html.Nav:
             links.append(html.Div(className="nav-divider"))
 
     return html.Nav(className="navbar", children=[
-        html.A(className="nav-logo", href="/", children=[
-            html.Div("🛡", className="nav-logo-icon"),
-            html.Div("Fraude en transacciones EU", className="nav-logo-name"),
-        ]),
+        html.A(className="nav-logo",
+                href="/",
+                children=[
+                    html.Img(src="/assets/credit-card-shield-svgrepo-com.svg", height="25",
+             style={"marginRight":"3px", "verticalAlign":"middle"}),
+                    html.Div("Fraude en transacciones EU", className="nav-logo-name"),
+                ],),
         *links,
         html.Div("BCE · Datos de Pago", className="nav-badge"),
     ])
