@@ -15,7 +15,7 @@ app = dash.Dash(
     meta_tags=[{"name": "viewport", "content": "width=device-width, initial-scale=1"}],
 )
 
-app.title = "FraudLens EU · Analytics"
+app.title = "Fraude en transacciones EU"
 
 # ── Flask-Caching (SimpleCache = RAM, sin dependencias externas) ───────────
 cache = Cache(app.server, config={
@@ -50,7 +50,7 @@ def build_navbar(current_path: str = "/") -> html.Nav:
     return html.Nav(className="navbar", children=[
         html.A(className="nav-logo", href="/", children=[
             html.Div("🛡", className="nav-logo-icon"),
-            html.Div("FraudLens EU", className="nav-logo-name"),
+            html.Div("Fraude en transacciones EU", className="nav-logo-name"),
         ]),
         *links,
         html.Div("BCE · Datos de Pago", className="nav-badge"),
