@@ -4,25 +4,37 @@ import dash_bootstrap_components as dbc
 import plotly.graph_objects as go
 import numpy as np
 from utils.svg_icons import ico_circle_x, ico_circle_ok, ico_alert
-from utils.data_loader import load_data
+from utils.data_loader import load_data  # importado pero no usado
 
 dash.register_page(__name__, path="/problema", name="Problema", order=2)
 
 A = "#FF6584"; P = "#6C5CE7"; T = "#00C9A7"; AM = "#FDB94B"
 
-def layout():
-    df = load_data()
-    vc = df["tipo_fraude"].value_counts().reset_index()
-    vc.columns = ["Tipo", "Conteo"]
-    vc["Porcentaje"] = (vc["Conteo"] / vc["Conteo"].sum() * 100).round(2)
+# ── Datos quemados ─────────────────────────────────────────────────────────────
+HARDCODED_DATA = {
+    "fraude_n":    1944,
+    "no_fraude_n": 660672,
+    "distribucion": [
+        {"Tipo": "sin fraude",  "Conteo": 660672, "Porcentaje": 99.71},
+        {"Tipo": "con fraude",  "Conteo": 1944,   "Porcentaje": 0.29},
+    ],
+    "tendencia": {
+        "years": [2020, 2021, 2022, 2023, 2024],
+        "vals":  [2.1,  2.9,  3.4,  3.5,  4.2],
+    },
+}
+# ──────────────────────────────────────────────────────────────────────────────
 
-    fraude_n    = int(vc[vc["Tipo"] == "con fraude"]["Conteo"].values[0])   if "con fraude"  in vc["Tipo"].values else 1944
-    no_fraude_n = int(vc[vc["Tipo"] == "sin fraude"]["Conteo"].values[0]) if "sin fraude" in vc["Tipo"].values else 660672
+
+def layout():
+    fraude_n    = HARDCODED_DATA["fraude_n"]
+    no_fraude_n = HARDCODED_DATA["no_fraude_n"]
+    distribucion = HARDCODED_DATA["distribucion"]
 
     # ── Main bar chart ─────────────────────────────────────────────────
     fig_bar = go.Figure()
     colors = {"sin fraude": P, "con fraude": A}
-    for _, row in vc.iterrows():
+    for row in distribucion:
         fig_bar.add_trace(go.Bar(
             name=row["Tipo"], x=[row["Tipo"]], y=[row["Conteo"]],
             marker_color=colors.get(row["Tipo"], "#ccc"),
@@ -42,8 +54,8 @@ def layout():
     )
 
     # ── Fraud trend line ───────────────────────────────────────────────
-    years = [2020, 2021, 2022, 2023, 2024]
-    vals  = [2.1,  2.9,  3.4,  3.5,  4.2]
+    years = HARDCODED_DATA["tendencia"]["years"]
+    vals  = HARDCODED_DATA["tendencia"]["vals"]
     fig_trend = go.Figure()
     fig_trend.add_trace(go.Scatter(
         x=years, y=vals, mode="lines+markers+text",
@@ -105,7 +117,7 @@ def layout():
 
                 dbc.Col(html.Div([
                     html.Div("27+", style={"fontSize": "26px", "fontWeight": "800",
-                                            "color": T, "fontFamily": "'Sora',sans-serif", "lineHeight": "1", "color": A}),
+                                            "color": A, "fontFamily": "'Sora',sans-serif", "lineHeight": "1"}),
                     html.Div("países analizados", style={"fontSize": "11px", "color": "#AEADB8", "marginTop": "4px"}),
                     html.Div("UE · 2000–2024", style={"fontSize": "11px", "fontWeight": "700", "color": "#AEADB8", "marginTop": "3px"}),
                 ], className="card", style={"textAlign": "center", "padding": "18px"}), md=3),
@@ -145,8 +157,6 @@ def layout():
 
                 
             ], className="g-3 mb-3", style={"alignItems": "stretch"}),
-
-            
 
         ], className="page-content"),
     ])
