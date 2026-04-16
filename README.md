@@ -43,7 +43,9 @@ python app.py
 
 ## Datos
 
-El dataset `data/payments_eu.csv` está almacenado con **Git LFS** en: [https://media.githubusercontent.com/media/T1fff/data/refs/heads/main/data_payments.csv].
+El dataset se encuentra cargado en el repositorio.
+
+De la misma manera, está almacenado con **Git LFS** en: [https://media.githubusercontent.com/media/T1fff/data/refs/heads/main/data_payments.csv].
 
 O descarga directamente del BCE:  
 [sdw.ecb.europa.eu](https://sdw.ecb.europa.eu/browse.do?node=9691136)
