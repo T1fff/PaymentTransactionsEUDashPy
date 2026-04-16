@@ -915,9 +915,9 @@ def _render_grafico(var, df):
     ]
 
 def _render_monto(df):
-    sub = {"PN":df[df["unidad"]=="PN"]["monto_real"].dropna(),
-           "EUR":df[df["unidad"]=="EUR"]["monto_real"].dropna(),
-           "XDF":df[df["unidad"]=="XDF"]["monto_real"].dropna()}
+    sub = {"PN":df[df["unidad"]=="PN"]["monto"].dropna(),
+           "EUR":df[df["unidad"]=="EUR"]["monto"].dropna(),
+           "XDF":df[df["unidad"]=="XDF"]["monto"].dropna()}
     colors = {"PN":C_PURP,"EUR":"#6C5CE7","XDF":"#00C9A7"}
     fig = go.Figure()
     for k,s in sub.items():
@@ -926,7 +926,7 @@ def _render_monto(df):
         template="plotly_white", height=360,
         margin=dict(t=10,b=30,l=20,r=20),
         paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-        yaxis=dict(title="monto_real",gridcolor="#F0EDE8"),
+        yaxis=dict(title="monto",gridcolor="#F0EDE8"),
         font=dict(family="Plus Jakarta Sans",color="#6E6D7A"),showlegend=True,
     )
     return [
@@ -1007,9 +1007,9 @@ def _render_stats_tabla(var, df):
 
 def _render_stats_monto(df):
     nan_t = df["monto"].isna().sum()
-    sub   = {"PN":df[df["unidad"]=="PN"]["monto_real"].dropna(),
-             "EUR":df[df["unidad"]=="EUR"]["monto_real"].dropna(),
-             "XDF":df[df["unidad"]=="XDF"]["monto_real"].dropna()}
+    sub   = {"PN":df[df["unidad"]=="PN"]["monto"].dropna(),
+             "EUR":df[df["unidad"]=="EUR"]["monto"].dropna(),
+             "XDF":df[df["unidad"]=="XDF"]["monto"].dropna()}
     return [
         html.P("Estadísticas", style={"color":TXT_MAIN,"fontWeight":"600","marginBottom":"16px"}),
         *[html.Div([html.Div(lbl,style={"fontSize":"11px","color":TXT_MUTE}),
