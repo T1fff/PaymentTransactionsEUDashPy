@@ -38,7 +38,7 @@ pip install -r requirements.txt
 python app.py
 
 # 6. Abrir en el navegador
-# http://127.0.0.1:8050
+# http://127.0.0.1:8051
 ```
 
 ## Datos
