@@ -31,3 +31,4 @@ yarg==0.1.10
 zipp==3.23.0
 flask-caching>=2.1.0
 pyarrow>=14.0.0
+duckdb>=0.10.0
