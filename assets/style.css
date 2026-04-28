@@ -1,0 +1,468 @@
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap");
+
+/* ─── TOKENS ────────────────────────────────────────────────────────── */
+:root {
+  --bg: #f2f0eb;
+  --surface: #ffffff;
+  --surface2: #faf9f7;
+  --accent: #ff6584;
+  --accent2: #ff8fa3;
+  --accent-lt: #fff0f3;
+  --coral: #ff7e5f;
+  --purple: #6c5ce7;
+  --purple-lt: #eef0ff;
+  --teal: #00c9a7;
+  --teal-lt: #e0faf5;
+  --amber: #fdb94b;
+  --amber-lt: #fff8ec;
+  --red: #ff4757;
+  --red-lt: #fff2f3;
+  --green: #00b894;
+  --txt: #1e1e2e;
+  --txt2: #6e6d7a;
+  --txt3: #aeadb8;
+  --border: #e8e5de;
+  --border2: #f0ede8;
+  --shadow-sm: 0 1px 4px rgba(0, 0, 0, 0.06);
+  --shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 6px 24px rgba(0, 0, 0, 0.1);
+  --r: 18px;
+  --r-sm: 12px;
+  --r-xs: 8px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: "Plus Jakarta Sans", sans-serif;
+  background: var(--bg);
+  color: var(--txt);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* ─── TOPBAR / NAVBAR ───────────────────────────────────────────────── */
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  background: #1a1828;
+  height: 62px;
+  display: flex;
+  align-items: center;
+  padding: 0 28px;
+  gap: 6px;
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.18);
+}
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-right: 24px;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.nav-logo-icon {
+  width: 34px;
+  height: 34px;
+  background: var(--accent);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  box-shadow: 0 4px 12px rgba(255, 101, 132, 0.4);
+}
+
+.nav-logo-name {
+  font-family: "Sora", sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  white-space: nowrap;
+}
+
+.nav-link {
+  padding: 7px 13px;
+  border-radius: var(--r-sm);
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+  text-decoration: none;
+  transition: all 0.15s;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  white-space: nowrap;
+}
+
+.nav-link:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.9);
+}
+.nav-link.active {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 3px 10px rgba(255, 101, 132, 0.4);
+}
+
+.nav-divider {
+  width: 1px;
+  height: 18px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+
+.nav-badge {
+  margin-left: auto;
+  background: rgba(255, 101, 132, 0.15);
+  border: 1px solid rgba(255, 101, 132, 0.3);
+  color: var(--accent2);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+/* ─── PAGE WRAPPER ──────────────────────────────────────────────────── */
+.page-content {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 28px 28px 48px;
+}
+
+/* ─── SECTION HEADER ────────────────────────────────────────────────── */
+.section-header {
+  margin-bottom: 24px;
+}
+
+.page-title {
+  font-family: "Sora", sans-serif;
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--txt);
+  line-height: 1.2;
+}
+
+.page-sub {
+  font-size: 13px;
+  color: var(--txt2);
+  margin-top: 4px;
+}
+
+/* ─── CARDS ─────────────────────────────────────────────────────────── */
+.card {
+  background: var(--surface);
+  border-radius: var(--r);
+  padding: 22px 24px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+
+.card-title {
+  font-family: "Sora", sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--txt);
+  margin-bottom: 4px;
+}
+
+.card-sub {
+  font-size: 12px;
+  color: var(--txt2);
+  margin-bottom: 14px;
+}
+
+/* ─── KPI CARDS ─────────────────────────────────────────────────────── */
+.kpi-card {
+  background: var(--surface);
+  border-radius: var(--r);
+  padding: 20px 22px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  height: 100%;
+}
+
+.kpi-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
+.kpi-val {
+  font-family: "Sora", sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--txt);
+  line-height: 1;
+}
+
+.kpi-lbl {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--txt2);
+  margin-top: 6px;
+}
+
+.kpi-trend {
+  font-size: 11px;
+  font-weight: 600;
+  margin-top: 5px;
+}
+
+/* ─── HERO KPI (gradient) ────────────────────────────────────────────── */
+.kpi-hero {
+  background: linear-gradient(135deg, #ff6584 0%, #ff9aab 100%);
+  border-radius: var(--r);
+  padding: 24px;
+  color: #fff;
+  box-shadow: 0 8px 28px rgba(255, 101, 132, 0.38);
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+.kpi-hero::after {
+  content: "";
+  position: absolute;
+  bottom: -30px;
+  right: -30px;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+}
+.kpi-hero .kpi-val {
+  color: #fff;
+  font-size: 32px;
+}
+.kpi-hero .kpi-lbl {
+  color: rgba(255, 255, 255, 0.85);
+}
+.kpi-hero .kpi-trend {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* ─── INTRO TEXT ─────────────────────────────────────────────────────── */
+.intro-text p {
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--txt);
+  margin-bottom: 14px;
+}
+
+/* ─── OBJ CARDS ──────────────────────────────────────────────────────── */
+.obj-card {
+  background: var(--accent-lt);
+  border-left: 4px solid var(--accent);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  padding: 14px 18px;
+  margin-bottom: 10px;
+}
+
+.obj-card-title {
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+
+.obj-card-text {
+  font-size: 13px;
+  color: var(--txt);
+  line-height: 1.6;
+}
+
+/* ─── STATS TABLE ────────────────────────────────────────────────────── */
+.stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.stats-table th {
+  background: var(--bg);
+  color: var(--txt2);
+  font-weight: 700;
+  padding: 10px 14px;
+  text-align: left;
+  border-bottom: 2px solid var(--border);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.stats-table td {
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--border2);
+  color: var(--txt);
+}
+.stats-table tr:last-child td {
+  border-bottom: none;
+}
+.stats-table tr:hover td {
+  background: var(--surface2);
+}
+
+/* ─── REFERENCE ──────────────────────────────────────────────────────── */
+.ref-item {
+  font-size: 13px;
+  color: var(--purple);
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border2);
+  line-height: 1.5;
+}
+.ref-item:last-child {
+  border-bottom: none;
+}
+
+/* ─── CONCLUSION CARDS ───────────────────────────────────────────────── */
+.conc-card {
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+  border-radius: var(--r);
+  padding: 22px 24px;
+  color: #fff;
+  margin-bottom: 14px;
+  box-shadow: 0 6px 20px rgba(255, 101, 132, 0.3);
+}
+.conc-card-title {
+  font-weight: 700;
+  font-size: 14px;
+  margin-bottom: 6px;
+  font-family: "Sora", sans-serif;
+}
+.conc-card-text {
+  font-size: 13px;
+  line-height: 1.65;
+  opacity: 0.92;
+}
+
+/* ─── STRETCH ROWS ───────────────────────────────────────────────────── */
+.row-stretch {
+  align-items: stretch !important;
+}
+.row-stretch > [class*="col"] > * {
+  height: 100%;
+}
+
+/* ─── SCROLLBAR ──────────────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: var(--border2);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--txt3);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+}
+
+/* ─── PLOTLY ─────────────────────────────────────────────────────────── */
+.js-plotly-plot .plotly {
+  background: transparent !important;
+}
+
+/* ─── DROPDOWN ───────────────────────────────────────────────────────── */
+.Select-control {
+  border-color: var(--border) !important;
+  border-radius: var(--r-xs) !important;
+}
+.Select-menu-outer {
+  border-color: var(--border) !important;
+  border-radius: var(--r-xs) !important;
+}
+
+/* ─── LOADING SPINNER ────────────────────────────────────────────────── */
+._dash-loading {
+  margin: auto;
+  color: transparent;
+  width: 5rem;
+  height: 5rem;
+  text-align: center;
+  background: transparent;
+}
+._dash-loading::after {
+  content: "";
+  display: inline-block;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 1em;
+  height: 1em;
+  color: var(--accent);
+  border-radius: 50%;
+  margin: 72px auto;
+  vertical-align: text-bottom;
+  margin-top: 2rem;
+  animation:
+    load6 1.7s infinite ease,
+    round 1.7s infinite ease;
+}
+@keyframes load6 {
+  0%,
+  5%,
+  95% {
+    box-shadow:
+      0 -0.83em 0 -0.4em,
+      0 -0.83em 0 -0.42em,
+      0 -0.83em 0 -0.44em,
+      0 -0.83em 0 -0.46em,
+      0 -0.83em 0 -0.477em;
+  }
+  10%,
+  59% {
+    box-shadow:
+      0 -0.83em 0 -0.4em,
+      -0.087em -0.825em 0 -0.42em,
+      -0.173em -0.812em 0 -0.44em,
+      -0.256em -0.789em 0 -0.46em,
+      -0.297em -0.775em 0 -0.477em;
+  }
+  20% {
+    box-shadow:
+      0 -0.83em 0 -0.4em,
+      -0.338em -0.758em 0 -0.42em,
+      -0.555em -0.617em 0 -0.44em,
+      -0.671em -0.488em 0 -0.46em,
+      -0.749em -0.34em 0 -0.477em;
+  }
+  38% {
+    box-shadow:
+      0 -0.83em 0 -0.4em,
+      -0.377em -0.74em 0 -0.42em,
+      -0.645em -0.522em 0 -0.44em,
+      -0.775em -0.297em 0 -0.46em,
+      -0.82em -0.09em 0 -0.477em;
+  }
+  100% {
+    box-shadow:
+      0 -0.83em 0 -0.4em,
+      0 -0.83em 0 -0.42em,
+      0 -0.83em 0 -0.44em,
+      0 -0.83em 0 -0.46em,
+      0 -0.83em 0 -0.477em;
+  }
+}
+@keyframes round {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
