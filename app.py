@@ -58,7 +58,7 @@ def build_navbar(current_path: str = "/") -> html.Nav:
                     html.Div("Fraude en transacciones EU", className="nav-logo-name"),
                 ],),
         *links,
-        html.Div("BCE · Datos de Pago", className="nav-badge"),
+        
     ])
 
 # ── Layout (sin sleep, sin carga de datos aquí) ────────────────────────────
