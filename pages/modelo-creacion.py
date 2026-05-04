@@ -12,7 +12,12 @@ dash.register_page(
 # ── Carga de datos ─────────────────────────────────────────────────────────
 _BASE = os.path.dirname(os.path.dirname(__file__))
 _CSV  = os.path.join(_BASE, "data", "comparacion_modelos.csv")
+_CSV_PARAMS = os.path.join(_BASE, "data", "mejores_parametros.csv")
 
+try:
+    df_params = pd.read_csv(_CSV_PARAMS)
+except Exception:
+    df_params = pd.DataFrame()
 try:
     df_models = pd.read_csv(_CSV)
 except Exception:
@@ -145,6 +150,36 @@ def _build_csv_table():
         sort_action="native",
         filter_action="native",
     )
+def _params_table(df, modelo, cols_rename):
+    """Filtra el df por modelo y muestra solo las columnas relevantes."""
+    if df.empty:
+        return html.P("No se encontró mejores_parametros.csv", style={"color": "var(--txt2)", "fontSize": "13px"})
+    
+    subset = df[df["modelo"] == modelo][["balanceo"] + list(cols_rename.keys())].copy()
+    subset = subset.rename(columns=cols_rename)
+    
+    return dash_table.DataTable(
+        data=subset.to_dict("records"),
+        columns=[{"name": c, "id": c} for c in subset.columns],
+        style_table={"overflowX": "auto", "borderRadius": "var(--r-sm)", "overflow": "hidden"},
+        style_header={
+            "backgroundColor": "#1a1828", "color": "#ffffff",
+            "fontWeight": "700", "fontSize": "11px", "textTransform": "uppercase",
+            "letterSpacing": "0.5px", "border": "none",
+            "borderBottom": "2px solid var(--border)", "padding": "10px 14px",
+        },
+        style_cell={
+            "fontFamily": "Plus Jakarta Sans, sans-serif", "fontSize": "13px",
+            "color": "var(--txt)", "padding": "9px 14px",
+            "border": "none", "borderBottom": "1px solid var(--border2)",
+            "backgroundColor": "white", "textAlign": "center",
+        },
+        style_data_conditional=[
+            {"if": {"row_index": "odd"}, "backgroundColor": "var(--surface2)"},
+            {"if": {"column_id": "balanceo"}, "fontWeight": "700", "color": "var(--accent)"},
+        ],
+    )
+    
 
 
 # ══════════════════════════════════════════════════════════════════════════
@@ -565,6 +600,81 @@ layout = html.Div(className="page-content", children=[
         html.Div("Métricas en test set por modelo y técnica de balanceo", className="card-title"),
         html.Div("Haz clic en los encabezados para ordenar · Escribe en los campos para filtrar", className="card-sub"),
         html.Div(style={"marginTop": "12px"}, children=[_build_csv_table()]),
+    ]),
+    
+    # ══════════════════════════════════════════════════════════════════════
+# 6.5 · MEJORES HIPERPARÁMETROS
+# ══════════════════════════════════════════════════════════════════════
+    _section_title("", "Mejores Hiperparámetros por Modelo",
+                "Resultado de RandomizedSearchCV (n_iter=20) — un registro por estrategia de balanceo"),
+
+    html.Div(style={"display": "flex", "flexDirection": "column", "gap": "14px", "marginBottom": "28px"}, children=[
+
+        # XGBoost
+        html.Div(className="card", style={"borderLeft": "4px solid var(--accent)"}, children=[
+            html.Div(style={"display": "flex", "alignItems": "center", "gap": "10px", "marginBottom": "14px"}, children=[
+                html.Div("XGBoost", className="card-title", style={"fontSize": "15px", "margin": "0"}),
+                html.Span("PR-AUC 0.952", style={
+                    "background": "var(--accent-lt)", "color": "var(--accent)",
+                    "borderRadius": "20px", "padding": "3px 12px", "fontSize": "11px", "fontWeight": "700",
+                }),
+            ]),
+            _params_table(df_params, "XGBoost", {
+                "classifier__learning_rate":    "learning_rate",
+                "classifier__max_depth":        "max_depth",
+                "classifier__n_estimators":     "n_estimators",
+                "classifier__subsample":        "subsample",
+                "classifier__scale_pos_weight": "scale_pos_weight",
+            }),
+        ]),
+
+        # Random Forest
+        html.Div(className="card", style={"borderLeft": "4px solid var(--teal)"}, children=[
+            html.Div(style={"display": "flex", "alignItems": "center", "gap": "10px", "marginBottom": "14px"}, children=[
+                html.Div("Random Forest", className="card-title", style={"fontSize": "15px", "margin": "0"}),
+                html.Span("PR-AUC 0.966", style={
+                    "background": "var(--teal-lt)", "color": "var(--teal)",
+                    "borderRadius": "20px", "padding": "3px 12px", "fontSize": "11px", "fontWeight": "700",
+                }),
+            ]),
+            _params_table(df_params, "Random_Forest", {
+                "classifier__n_estimators":      "n_estimators",
+                "classifier__max_depth":         "max_depth",
+                "classifier__max_features":      "max_features",
+                "classifier__min_samples_leaf":  "min_samples_leaf",
+                "classifier__min_samples_split": "min_samples_split",
+            }),
+        ]),
+
+        # LinearSVC
+        html.Div(className="card", style={"borderLeft": "4px solid var(--coral)"}, children=[
+            html.Div(style={"display": "flex", "alignItems": "center", "gap": "10px", "marginBottom": "14px"}, children=[
+                html.Div("LinearSVC", className="card-title", style={"fontSize": "15px", "margin": "0"}),
+                html.Span("PR-AUC 0.684", style={
+                    "background": "var(--amber-lt)", "color": "var(--coral)",
+                    "borderRadius": "20px", "padding": "3px 12px", "fontSize": "11px", "fontWeight": "700",
+                }),
+            ]),
+            _params_table(df_params, "LinearSVC", {
+                "classifier__estimator__C":        "C",
+                "classifier__estimator__max_iter": "max_iter",
+            }),
+        ]),
+
+        # Naive Bayes
+        html.Div(className="card", style={"borderLeft": "4px solid var(--amber)"}, children=[
+            html.Div(style={"display": "flex", "alignItems": "center", "gap": "10px", "marginBottom": "14px"}, children=[
+                html.Div("Naive Bayes", className="card-title", style={"fontSize": "15px", "margin": "0"}),
+                html.Span("PR-AUC 0.175", style={
+                    "background": "var(--amber-lt)", "color": "var(--amber)",
+                    "borderRadius": "20px", "padding": "3px 12px", "fontSize": "11px", "fontWeight": "700",
+                }),
+            ]),
+            _params_table(df_params, "Naive_Bayes", {
+                "classifier__var_smoothing": "var_smoothing",
+                "classifier__chunk_size":    "chunk_size",
+            }),
+        ]),
     ]),
 
     # ══════════════════════════════════════════════════════════════════════
