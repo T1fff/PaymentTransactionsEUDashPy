@@ -34,6 +34,7 @@ NAV_PAGES = [
     {"path": "/marco-teorico",  "name": "Marco Teórico"},
     {"path": "/univariado",   "name": "EDA Univariado"},
     {"path": "/multivariado", "name": "EDA Multivariado"},
+    {"path": "/modelo-creacion", "name": "Creación del Modelo"},
     {"path": "/modelo", "name": "Modelo Predictivo"},
     {"path": "/conclusiones", "name": "Conclusiones"},
 ]
