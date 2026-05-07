@@ -36,6 +36,25 @@ def parrafo(*children) -> html.P:
                          "fontSize": "14px", "color": "#1E1E2E"})
 
 
+def formula(texto: str) -> html.Div:
+    """Bloque para fórmulas matemáticas."""
+    return html.Div(
+        texto,
+        style={
+            "background": "#F7F5FF",
+            "border": f"1px solid {P}30",
+            "borderRadius": "6px",
+            "padding": "10px 18px",
+            "fontFamily": "monospace",
+            "fontSize": "13px",
+            "color": P,
+            "margin": "8px 0 14px",
+            "textAlign": "center",
+            "letterSpacing": "0.3px",
+        }
+    )
+
+
 # ── Layout ─────────────────────────────────────────────────────────────────
 
 def layout():
@@ -200,6 +219,138 @@ def layout():
                             "comercio. Gracias a este marco, el dataset del BCE constituye la "
                             "fuente más completa y estandarizada disponible para el análisis del "
                             "fraude en pagos a escala europea.", ref(13), ref(10),
+                        ),
+                    ]
+                ), md=12),
+            ], className="g-3 mb-3"),
+
+            # ── Sección 6 ─────────────────────────────────────────────────
+            dbc.Row([
+                dbc.Col(card_seccion(
+                    "6. Random Forest: fundamentos y aplicación en detección de fraude",
+                    [
+                        parrafo(
+                            "Random Forest es un algoritmo de aprendizaje supervisado basado en el "
+                            "principio de bagging (Bootstrap Aggregating), propuesto por Breiman "
+                            "en 2001. El algoritmo construye un conjunto de árboles de decisión "
+                            "independientes, cada uno entrenado sobre una submuestra aleatoria con "
+                            "reemplazo del conjunto de entrenamiento (bootstrap sample). En cada "
+                            "nodo de división de un árbol, solo se evalúa un subconjunto aleatorio "
+                            "de ", html.Code("max_features"), " variables candidatas como posibles "
+                            "puntos de corte, lo que introduce diversidad entre los árboles y "
+                            "reduce la correlación entre sus predicciones. La clasificación final "
+                            "se obtiene por votación mayoritaria entre todos los árboles del "
+                            "ensamble.", ref(5),
+                        ),
+                        parrafo(
+                            "La combinación de submuestreo de observaciones y submuestreo de "
+                            "variables produce modelos con baja varianza y alta robustez frente al "
+                            "ruido, sin incrementar sustancialmente el sesgo. A diferencia de un "
+                            "árbol de decisión individual, que tiende a sobreajustarse a los datos "
+                            "de entrenamiento, Random Forest generaliza mejor al promedio de "
+                            "múltiples árboles con alta varianza individual pero errores poco "
+                            "correlacionados entre sí. Esta propiedad lo hace especialmente "
+                            "adecuado para conjuntos de datos tabulares con interacciones no "
+                            "lineales y variables categóricas de alta cardinalidad, como las "
+                            "presentes en este análisis.", ref(5),
+                        ),
+                        parrafo(
+                            "En el contexto de la detección de fraude financiero, Random Forest "
+                            "ha demostrado consistentemente un alto poder discriminante. Una "
+                            "revisión sistemática de la literatura publicada entre 2012 y 2023 "
+                            "identificó a Random Forest como el algoritmo con mayor frecuencia de "
+                            "uso y mejores resultados en conjuntos de datos de transacciones reales, "
+                            "alcanzando tasas de precisión superiores al 95% en clasificación "
+                            "binaria de fraude.", ref(5), " En este proyecto, el modelo se "
+                            "entrenó con los hiperparámetros ", html.Code("n_estimators"),
+                            ", ", html.Code("max_depth"), ", ", html.Code("min_samples_split"),
+                            ", ", html.Code("min_samples_leaf"), " y ", html.Code("max_features"),
+                            " optimizados mediante RandomizedSearchCV con 10 pliegues estratificados.",
+                        ),
+                    ]
+                ), md=12),
+            ], className="g-3 mb-3"),
+
+            # ── Sección 7 ─────────────────────────────────────────────────
+            dbc.Row([
+                dbc.Col(card_seccion(
+                    "7. Balanced Accuracy como métrica en clases desbalanceadas",
+                    [
+                        parrafo(
+                            "En problemas de clasificación con clases desbalanceadas, la exactitud "
+                            "global (accuracy) resulta una métrica engañosa. Un clasificador que "
+                            "etiquete todas las observaciones como la clase mayoritaria —en este "
+                            "caso, transacciones legítimas— alcanzaría una accuracy del 99.7% sin "
+                            "detectar ningún fraude real. Para corregir este sesgo se utiliza la "
+                            "Balanced Accuracy (BA), definida como el promedio aritmético de la "
+                            "sensibilidad (recall de la clase positiva) y la especificidad (recall "
+                            "de la clase negativa):", ref(4),
+                        ),
+                        formula("BA = (Sensibilidad + Especificidad) / 2  =  (TP/(TP+FN) + TN/(TN+FP)) / 2"),
+                        parrafo(
+                            "Esta formulación garantiza que ambas clases reciban igual peso en la "
+                            "evaluación, independientemente de su frecuencia relativa. Un "
+                            "clasificador aleatorio obtiene una BA de 0.5, mientras que un modelo "
+                            "perfecto alcanza 1.0. Si el modelo clasifica todo como la clase "
+                            "mayoritaria, la sensibilidad colapsa a 0 y la BA desciende a 0.5, "
+                            "penalizando correctamente el comportamiento trivial que la accuracy "
+                            "ordinaria premiaría.", ref(4),
+                        ),
+                        parrafo(
+                            "En este proyecto, la Balanced Accuracy se registró como una de las "
+                            "métricas de validación cruzada en todos los modelos evaluados, "
+                            "permitiendo comparar el rendimiento real sobre ambas clases más allá "
+                            "de la capacidad del modelo para identificar transacciones legítimas. "
+                            "Su complemento con el PR-AUC y el F1-Score, ambos enfocados en la "
+                            "clase positiva, constituye el conjunto de métricas que guía la "
+                            "selección del modelo final.",
+                        ),
+                    ]
+                ), md=12),
+            ], className="g-3 mb-3"),
+
+            # ── Sección 8 ─────────────────────────────────────────────────
+            dbc.Row([
+                dbc.Col(card_seccion(
+                    "8. Resumen metodológico del modelo predictivo",
+                    [
+                        parrafo(
+                            "Para el modelado se seleccionaron ocho variables a partir del dataset "
+                            "original de 29 columnas: siete categóricas —", html.Code("frecuencia"),
+                            ", ", html.Code("pais_origen"), ", ", html.Code("pais_destino"),
+                            ", ", html.Code("tipo_trx"), ", ", html.Code("tipo_psp"),
+                            ", ", html.Code("unidad"), " y ", html.Code("tipo_monto"),
+                            "— y la variable numérica ", html.Code("monto_final"),
+                            ", transformada mediante ", html.Code("log1p"),
+                            " para corregir la distribución sesgada. La variable objetivo ",
+                            html.Code("tipo_fraude_bin"), " presenta un desbalanceo crítico del "
+                            "0.3% de casos positivos, lo que condicionó todas las decisiones de "
+                            "diseño del pipeline. El preprocesamiento se implementó con un ",
+                            html.Code("ColumnTransformer"), " que aplica imputación y escalado "
+                            "para la variable numérica, e imputación con OneHotEncoding para las "
+                            "categóricas, clonado individualmente en cada experimento para "
+                            "garantizar independencia entre modelos. Los datos se dividieron en "
+                            "80% entrenamiento y 20% prueba con split estratificado.",
+                        ),
+                        parrafo(
+                            "Se evaluaron seis algoritmos —Regresión Logística, Naive Bayes, "
+                            "LinearSVC, XGBoost, LightGBM y Random Forest— bajo cuatro estrategias "
+                            "de balanceo: sin balanceo, SMOTE, ADASYN y ajuste de pesos de clase. "
+                            "La búsqueda de hiperparámetros se realizó con RandomizedSearchCV "
+                            "usando StratifiedKFold de 10 pliegues, optimizando el F1-Score como "
+                            "métrica de refit. El hallazgo principal fue que ninguna técnica de "
+                            "balanceo mejoró el PR-AUC real sobre el conjunto de prueba: SMOTE, "
+                            "ADASYN y class weights dispararon el recall a ~1.0 a costa de una "
+                            "precisión inviable en producción. Random Forest sin balanceo obtuvo "
+                            "el mejor PR-AUC test (0.9659), seguido de XGBoost (0.9522), "
+                            "estadísticamente indistinguibles en ROC-AUC (p=0.922 por Bootstrap). "
+                            "XGBoost fue seleccionado como modelo final por su eficiencia "
+                            "computacional —55.8 s frente a 535.3 s de Random Forest—, sin "
+                            "sacrificio significativo en capacidad predictiva. El análisis de "
+                            "interpretabilidad con LIME reveló que el destino geográfico "
+                            "(", html.Code("pais_destino_W0"), ") y el tipo de transacción "
+                            "(", html.Code("tipo_trx_CP0"), ") son los predictores locales más "
+                            "fuertes de fraude en ambos modelos finalistas.",
                         ),
                     ]
                 ), md=12),
