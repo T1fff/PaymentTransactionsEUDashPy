@@ -341,7 +341,7 @@ layout = html.Div(className="page-content", children=[
             ]),
             _params_table(df_params, "Random_Forest", {
                 "classifier__n_estimators":      "n_estimators",
-                "classifier__max_depth":         "max_depth",
+                #"classifier__max_depth":         "max_depth",
                 "classifier__max_features":      "max_features",
                 "classifier__min_samples_leaf":  "min_samples_leaf",
                 "classifier__min_samples_split": "min_samples_split",
@@ -358,6 +358,7 @@ layout = html.Div(className="page-content", children=[
                 }),
             ]),
             _params_table(df_params, "Logistic_Regression", {
+                "classifier__max_iter": "max_iter",
                 "classifier__C":       "C",
                 "classifier__penalty": "penalty",
             }),
@@ -373,6 +374,7 @@ layout = html.Div(className="page-content", children=[
                 }),
             ]),
             _params_table(df_params, "LinearSVC", {
+                
                 "classifier__estimator__C":        "C",
                 "classifier__estimator__max_iter": "max_iter",
             }),
@@ -388,6 +390,7 @@ layout = html.Div(className="page-content", children=[
                 }),
             ]),
             _params_table(df_params, "Naive_Bayes", {
+                'classifier__chunk_size': "chunk_size",
                 "classifier__var_smoothing": "var_smoothing",
             }),
         ]),
