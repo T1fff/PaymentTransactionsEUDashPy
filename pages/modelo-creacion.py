@@ -123,32 +123,127 @@ def _inline_note(text, color="--accent", bg="--accent-lt"):
 def _build_csv_table():
     if df_models.empty:
         return html.P(
-            " No se encontró comparacion_modelos.csv en /data/ — verifica la ruta.",
+            "No se encontró comparacion_modelos.csv en /data/ — verifica la ruta.",
             style={"color": "var(--txt2)", "fontSize": "13px"},
         )
+
+    # Renombrar columnas para display
+    df_display = df_models.copy()
+    df_display = df_display.drop(columns=["f1_cv_refit"], errors="ignore")
+    df_display = df_display.rename(columns={
+        "modelo"          : "Modelo",
+        "balanceo"        : "Balanceo",
+        "pr_auc_cv"       : "PR-AUC CV",
+        "roc_auc_cv"      : "ROC-AUC CV",
+        "recall_cv"       : "Recall CV",
+        "precision_cv"    : "Precision CV",
+        "f1_cv"           : "F1 CV",
+        "pr_auc_test"     : "PR-AUC Test",
+        "roc_auc_test"    : "ROC-AUC Test",
+        "tiempo_s"        : "Tiempo (s)",
+    })
+
+    # 2. En numeric_cols
+    numeric_cols = ["PR-AUC CV", "ROC-AUC CV",
+                    "Recall CV", "Precision CV", "F1 CV",
+                    "PR-AUC Test", "ROC-AUC Test"]
+
+    columns = []
+    for c in df_display.columns:
+        col = {"name": c, "id": c}
+        if c in numeric_cols:
+            col["type"]   = "numeric"
+            col["format"] = {"specifier": ".4f"}
+        columns.append(col)
+
+    # Colores por modelo
+    modelo_colors = {
+        "XGBoost_hist"       : "var(--accent)",
+        "Random_Forest"      : "var(--teal)",
+        "Logistic_Regression": "#8b5cf6",
+        "LinearSVC"          : "var(--coral)",
+        "Naive_Bayes"        : "var(--amber)",
+    }
+
+    style_data_conditional = [
+        # Filas alternas
+        {"if": {"row_index": "odd"},  "backgroundColor": "var(--surface2)"},
+        {"if": {"state": "active"},   "backgroundColor": "var(--accent-lt)", "border": "none"},
+        # Columna Modelo en negrita
+        {"if": {"column_id": "Modelo"},  "fontWeight": "700"},
+        # Columna Balanceo con color acento
+        {"if": {"column_id": "Balanceo"}, "color": "var(--accent)", "fontWeight": "600"},
+        # PR-AUC Test alto (>= 0.90) en verde
+        *[
+            {
+                "if": {"filter_query": f'{{PR-AUC Test}} >= 0.90', "column_id": "PR-AUC Test"},
+                "color": "#16a34a", "fontWeight": "700",
+            }
+        ],
+        # PR-AUC Test medio (0.50 - 0.90) en amarillo
+        *[
+            {
+                "if": {"filter_query": f'{{PR-AUC Test}} < 0.90 && {{PR-AUC Test}} >= 0.50', "column_id": "PR-AUC Test"},
+                "color": "var(--amber)", "fontWeight": "600",
+            }
+        ],
+        # PR-AUC Test bajo (< 0.50) en rojo
+        *[
+            {
+                "if": {"filter_query": f'{{PR-AUC Test}} < 0.50', "column_id": "PR-AUC Test"},
+                "color": "var(--coral)", "fontWeight": "600",
+            }
+        ],
+    ]
+
     return dash_table.DataTable(
-        data=df_models.to_dict("records"),
-        columns=[{"name": c, "id": c} for c in df_models.columns],
-        style_table={"overflowX": "auto", "borderRadius": "var(--r-sm)", "overflow": "hidden"},
+        data=df_display.to_dict("records"),
+        columns=columns,
+        style_table={
+            "overflowX"    : "auto",
+            "borderRadius" : "var(--r-sm)",
+            "overflow"     : "hidden",
+        },
         style_header={
-            "backgroundColor": "var(--bg)", "color": "var(--txt2)",
-            "fontWeight": "700", "fontSize": "11px", "textTransform": "uppercase",
-            "letterSpacing": "0.5px", "border": "none",
-            "borderBottom": "2px solid var(--border)", "padding": "10px 14px",
+            "backgroundColor" : "#1a1828",
+            "color"           : "#ffffff",
+            "fontWeight"      : "700",
+            "fontSize"        : "11px",
+            "textTransform"   : "uppercase",
+            "letterSpacing"   : "0.5px",
+            "border"          : "none",
+            "borderBottom"    : "2px solid var(--border)",
+            "padding"         : "10px 14px",
+            "textAlign"       : "center",
         },
         style_cell={
-            "fontFamily": "Plus Jakarta Sans, sans-serif", "fontSize": "13px",
-            "color": "var(--txt)", "padding": "9px 14px",
-            "border": "none", "borderBottom": "1px solid var(--border2)",
-            "backgroundColor": "white",
+            "fontFamily"      : "Plus Jakarta Sans, sans-serif",
+            "fontSize"        : "13px",
+            "color"           : "var(--txt)",
+            "padding"         : "9px 14px",
+            "border"          : "none",
+            "borderBottom"    : "1px solid var(--border2)",
+            "backgroundColor" : "white",
+            "textAlign"       : "center",
+            "minWidth"        : "100px",
         },
-        style_data_conditional=[
-            {"if": {"row_index": "odd"}, "backgroundColor": "var(--surface2)"},
-            {"if": {"state": "active"}, "backgroundColor": "var(--accent-lt)", "border": "none"},
+        style_cell_conditional=[
+            {"if": {"column_id": "Modelo"},   "textAlign": "left", "minWidth": "140px"},
+            {"if": {"column_id": "Balanceo"}, "textAlign": "left", "minWidth": "110px"},
+            {"if": {"column_id": "Tiempo (s)"}, "minWidth": "90px"},
         ],
-        page_size=15,
+        style_data_conditional=style_data_conditional,
+        page_size=10,
         sort_action="native",
         filter_action="native",
+        tooltip_header={
+            "PR-AUC Test"   : "Área bajo la curva Precision-Recall en el conjunto de test",
+            "ROC-AUC Test"  : "Área bajo la curva ROC en el conjunto de test",
+            "F1 CV (refit)" : "F1 usado como métrica de refit en RandomizedSearchCV",
+            "Tiempo (s)"    : "Tiempo total de entrenamiento en segundos",
+        },
+        tooltip_delay=0,
+        tooltip_duration=None,
     )
 def _params_table(df, modelo, cols_rename):
     """Filtra el df por modelo y muestra solo las columnas relevantes."""
@@ -197,399 +292,6 @@ layout = html.Div(className="page-content", children=[
         ),
     ]),
 
-    # ══════════════════════════════════════════════════════════════════════
-    # 1 · VARIABLES
-    # ══════════════════════════════════════════════════════════════════════
-    _section_title("", "Variables del Modelo", "Features seleccionados y definición del target"),
-
-    html.Div(style={
-        "display": "grid", "gridTemplateColumns": "1fr 1fr",
-        "gap": "16px", "marginBottom": "28px",
-    }, children=[
-
-        # Features
-        html.Div(className="card", children=[
-            html.Div("Features (X)", className="card-title"),
-            html.Div("8 variables: 7 categóricas + 1 numérica continua", className="card-sub"),
-
-            html.Div(style={"marginBottom": "16px"}, children=[
-                html.Div("Categóricas — FEATURES_CAT", style={
-                    "fontSize": "11px", "fontWeight": "700", "color": "var(--txt2)",
-                    "textTransform": "uppercase", "letterSpacing": "0.5px", "marginBottom": "8px",
-                }),
-                html.Div(style={"display": "flex", "flexWrap": "wrap", "gap": "6px"}, children=[
-                    _chip(f, "--purple", "--purple-lt")
-                    for f in ["frecuencia", "pais_origen", "pais_destino",
-                              "tipo_trx", "tipo_psp", "unidad", "tipo_monto"]
-                ]),
-            ]),
-
-            html.Div(children=[
-                html.Div("Numérica", style={
-                    "fontSize": "11px", "fontWeight": "700", "color": "var(--txt2)",
-                    "textTransform": "uppercase", "letterSpacing": "0.5px", "marginBottom": "8px",
-                }),
-                _chip("monto_final", "--teal", "--teal-lt"),
-            ]),
-        ]),
-
-        # Target
-        html.Div(className="card", children=[
-            html.Div("Target (y) es tipo_fraude", className="card-title"),
-            html.Div("Esta variable se convirtió a binaria (tipo_fraude_bin)", className="card-sub"),
-
-            html.Div(style={
-                "background": "var(--surface2)", "borderRadius": "var(--r-xs)",
-                "padding": "12px 14px", "marginBottom": "14px",
-                "fontFamily": "monospace", "fontSize": "12px",
-                "color": "var(--txt)", "lineHeight": "2",
-                "border": "1px solid var(--border)",
-            }, children=[
-                html.Span('df["tipo_fraude_bin"] =', style={"color": "var(--txt2)"}),
-                html.Br(),
-                html.Span('  (df["tipo_fraude"].str.lower()', style={"color": "var(--txt2)"}),
-                html.Br(),
-                html.Span('    == ', style={"color": "var(--txt2)"}),
-                html.Span('"con fraude")', style={"color": "var(--teal)", "fontWeight": "700"}),
-                html.Br(),
-                html.Span("  .astype(int)", style={"color": "var(--accent)", "fontWeight": "700"}),
-            ]),
-
-            html.Div(style={"display": "flex", "gap": "10px"}, children=[
-                html.Div(style={
-                    "flex": "1", "background": "var(--teal-lt)", "borderRadius": "var(--r-xs)",
-                    "padding": "12px", "textAlign": "center",
-                }, children=[
-                    html.Div("0", style={"fontSize": "24px", "fontWeight": "800", "color": "var(--teal)", "fontFamily": "Sora, sans-serif"}),
-                    html.Div("Sin fraude", style={"fontSize": "11px", "color": "var(--txt2)", "fontWeight": "600"}),
-                ]),
-                html.Div(style={
-                    "flex": "1", "background": "var(--accent-lt)", "borderRadius": "var(--r-xs)",
-                    "padding": "12px", "textAlign": "center",
-                }, children=[
-                    html.Div("1", style={"fontSize": "24px", "fontWeight": "800", "color": "var(--accent)", "fontFamily": "Sora, sans-serif"}),
-                    html.Div("Con fraude", style={"fontSize": "11px", "color": "var(--txt2)", "fontWeight": "600"}),
-                ]),
-            ]),
-        ]),
-    ]),
-
-    # ══════════════════════════════════════════════════════════════════════
-    # 2 · PREPROCESAMIENTO
-    # ══════════════════════════════════════════════════════════════════════
-    _section_title("", "Preprocesamiento",
-                   "ColumnTransformer con pipelines independientes por tipo de variable"),
-
-    html.Div(className="card", style={"marginBottom": "28px"}, children=[
-
-        # Pills resumen
-        html.Div(style={
-            "display": "grid",
-            "gridTemplateColumns": "repeat(auto-fit, minmax(150px, 1fr))",
-            "gap": "10px", "marginBottom": "22px",
-        }, children=[
-            _pill("Split",            "80% train / 20% test",    "var(--purple)"),
-            _pill("Estratificación",  "Sí, sobre y",            "var(--teal)"),
-            _pill("Imputación num.",  "SimpleImputer (mediana)",  "var(--accent)"),
-            _pill("Imputación cat.",  "SimpleImputer (moda)",     "var(--amber)"),
-            _pill("Escalado",         "StandardScaler",           "var(--teal)"),
-            _pill("Encoding",         "OneHotEncoder (drop=first)","var(--purple)"),
-        ]),
-
-        # Dos pipelines lado a lado
-        html.Div(style={
-            "display": "grid", "gridTemplateColumns": "1fr 1fr",
-            "gap": "14px", "marginBottom": "16px",
-        }, children=[
-
-            html.Div(style={
-                "background": "var(--teal-lt)", "borderRadius": "var(--r-sm)",
-                "padding": "16px", "border": "1px solid rgba(0,201,167,0.2)",
-            }, children=[
-                html.Div("Pipeline Numérico", style={
-                    "fontFamily": "Sora, sans-serif", "fontWeight": "700",
-                    "fontSize": "13px", "color": "var(--teal)", "marginBottom": "10px",
-                }),
-                html.Div("Variable:", style={"fontSize": "11px", "color": "var(--txt2)", "marginBottom": "6px"}),
-                _chip("monto_final", "--teal", "--teal-lt"),
-                html.Div(style={"marginTop": "14px", "display": "flex", "flexDirection": "column", "gap": "8px"}, children=[
-                    html.Div(style={"display": "flex", "alignItems": "center", "gap": "10px"}, children=[
-                        html.Div("", style={"fontWeight": "800", "color": "var(--teal)", "fontSize": "15px", "width": "20px"}),
-                        html.Code("SimpleImputer(strategy='median')",
-                                  style={"fontSize": "12px", "fontFamily": "monospace", "color": "var(--txt)"}),
-                    ]),
-                    html.Div(style={"display": "flex", "alignItems": "center", "gap": "10px"}, children=[
-                        html.Div("", style={"fontWeight": "800", "color": "var(--teal)", "fontSize": "15px", "width": "20px"}),
-                        html.Code("StandardScaler()",
-                                  style={"fontSize": "12px", "fontFamily": "monospace", "color": "var(--txt)"}),
-                    ]),
-                ]),
-            ]),
-
-            html.Div(style={
-                "background": "var(--purple-lt)", "borderRadius": "var(--r-sm)",
-                "padding": "16px", "border": "1px solid rgba(108,92,231,0.2)",
-            }, children=[
-                html.Div("Pipeline Categórico", style={
-                    "fontFamily": "Sora, sans-serif", "fontWeight": "700",
-                    "fontSize": "13px", "color": "var(--purple)", "marginBottom": "10px",
-                }),
-                html.Div("Variables (7):", style={"fontSize": "11px", "color": "var(--txt2)", "marginBottom": "6px"}),
-                html.Div(style={"display": "flex", "flexWrap": "wrap", "gap": "4px", "marginBottom": "14px"}, children=[
-                    _chip(f, "--purple", "--purple-lt")
-                    for f in ["frecuencia", "pais_origen", "pais_destino",
-                              "tipo_trx", "tipo_psp", "unidad", "tipo_monto"]
-                ]),
-                html.Div(style={"display": "flex", "flexDirection": "column", "gap": "8px"}, children=[
-                    html.Div(style={"display": "flex", "alignItems": "center", "gap": "10px"}, children=[
-                        html.Div("", style={"fontWeight": "800", "color": "var(--purple)", "fontSize": "15px", "width": "20px"}),
-                        html.Code("SimpleImputer(strategy='most_frequent')",
-                                  style={"fontSize": "12px", "fontFamily": "monospace", "color": "var(--txt)"}),
-                    ]),
-                    html.Div(style={"display": "flex", "alignItems": "center", "gap": "10px"}, children=[
-                        html.Div("", style={"fontWeight": "800", "color": "var(--purple)", "fontSize": "15px", "width": "20px"}),
-                        html.Code("OneHotEncoder(drop='first', handle_unknown='ignore')",
-                                  style={"fontSize": "11px", "fontFamily": "monospace", "color": "var(--txt)"}),
-                    ]),
-                ]),
-            ]),
-        ]),
-
-        _inline_note([
-            html.Strong("drop='first': ", style={"color": "var(--accent)"}),
-            "elimina una categoría por variable para evitar multicolinealidad perfecta. ",
-            html.Strong("handle_unknown='ignore': ", style={"color": "var(--accent)"}),
-            "garantiza que categorías no vistas en entrenamiento no rompan la inferencia en producción. ",
-            "El ColumnTransformer usa remainder='drop', descartando cualquier columna no especificada.",
-        ]),
-    ]),
-
-    # ══════════════════════════════════════════════════════════════════════
-    # 3 · VALIDACIÓN Y BÚSQUEDA
-    # ══════════════════════════════════════════════════════════════════════
-    _section_title("", "Validación y Búsqueda de Hiperparámetros",
-                   "StratifiedKFold (k=5) · RandomizedSearchCV (n_iter=20) · balanced_accuracy"),
-
-    html.Div(style={
-        "display": "grid", "gridTemplateColumns": "1fr 1fr",
-        "gap": "16px", "marginBottom": "28px",
-    }, children=[
-
-        html.Div(className="card", children=[
-            html.Div("Configuración de RandomizedSearchCV", className="card-title"),
-            html.Div("Aplicado a cada modelo y cada técnica de balanceo", className="card-sub"),
-            html.Div(style={"display": "flex", "flexDirection": "column", "gap": "8px"}, children=[
-                (lambda lbl, val, c: html.Div(style={
-                    "display": "flex", "justifyContent": "space-between", "alignItems": "center",
-                    "padding": "9px 14px", "background": "var(--surface2)",
-                    "borderRadius": "var(--r-xs)", "border": "1px solid var(--border)",
-                }, children=[
-                    html.Span(lbl, style={"fontSize": "13px", "color": "var(--txt2)"}),
-                    html.Span(val, style={"fontWeight": "800", "color": c,
-                                          "fontFamily": "Sora, sans-serif", "fontSize": "13px"}),
-                ]))(*row)
-                for row in [
-                    ("Iteraciones",              "n_iter = 20",          "var(--purple)"),
-                    ("Folds CV",                 "k = 5",                "var(--purple)"),
-                    ("Shuffle",                  "True",                 "var(--teal)"),
-                    ("Métrica refit",            "balanced_accuracy",    "var(--accent)"),
-                    ("n_jobs",                   "-1 (todos los cores)", "var(--txt)"),
-                    ("Estratificación en folds", "StratifiedKFold",      "var(--teal)"),
-                ]
-            ]),
-        ]),
-
-        html.Div(className="card", children=[
-            html.Div("Métricas registradas por fold (SCORING_MULTIPLE)", className="card-title"),
-            html.Div("Todas almacenadas en cv_results_ para análisis posterior", className="card-sub"),
-            html.Div(style={"display": "flex", "flexDirection": "column", "gap": "6px"}, children=[
-                html.Div(style={
-                    "display": "flex", "alignItems": "center", "gap": "10px",
-                    "padding": "8px 12px", "background": f"var({bg})", "borderRadius": "var(--r-xs)",
-                }, children=[
-                    _chip(m, c, bg),
-                    html.Span(desc, style={"fontSize": "12px", "color": "var(--txt2)"}),
-                ])
-                for m, c, bg, desc in [
-                    ("pr_auc",            "--accent",  "--accent-lt",  "Área PR ← métrica principal de fraude"),
-                    ("roc_auc",           "--teal",    "--teal-lt",    "Área ROC"),
-                    ("f1",                "--purple",  "--purple-lt",  "F1-score"),
-                    ("recall",            "--amber",   "--amber-lt",   "Sensibilidad (fraudes capturados)"),
-                    ("precision",         "--coral",   "--amber-lt",   "Precisión positiva"),
-                    ("balanced_accuracy", "--txt",     "--surface2",   "← refit (optimización)"),
-                ]
-            ]),
-        ]),
-    ]),
-
-    # ══════════════════════════════════════════════════════════════════════
-    # 4 · TÉCNICAS DE BALANCEO
-    # ══════════════════════════════════════════════════════════════════════
-    _section_title("", "Técnicas de Balanceo",
-                   "4 variantes evaluadas por modelo"),
-
-    html.Div(style={
-        "display": "grid", "gridTemplateColumns": "repeat(auto-fit, minmax(220px, 1fr))",
-        "gap": "14px", "marginBottom": "28px",
-    }, children=[
-
-        html.Div(className="card", style={"borderTop": "3px solid var(--txt3)"}, children=[
-            html.Div(" sin_balanceo", className="card-title"),
-            html.Div("Línea base sin corrección", className="card-sub"),
-            html.Div("balancer = None", style={"fontFamily": "monospace", "fontSize": "12px", "color": "var(--txt2)", "marginBottom": "8px"}),
-            _inline_note(
-                "Referencia para medir el impacto real de cada técnica.",
-                "--txt3", "--surface2"
-            ),
-        ]),
-
-        html.Div(className="card", style={"borderTop": "3px solid var(--teal)"}, children=[
-            html.Div(" smote", className="card-title"),
-            html.Div("Synthetic Minority Over-sampling", className="card-sub"),
-            html.Div("SMOTE(random_state=SEED)", style={"fontFamily": "monospace", "fontSize": "12px", "color": "var(--txt2)", "marginBottom": "8px"}),
-            _inline_note(
-                "Genera instancias sintéticas de fraude interpolando entre k vecinos más cercanos.",
-                "--teal", "--teal-lt"
-            ),
-        ]),
-
-        html.Div(className="card", style={"borderTop": "3px solid var(--purple)"}, children=[
-            html.Div(" adasyn", className="card-title"),
-            html.Div("Adaptive Synthetic Sampling", className="card-sub"),
-            html.Div("ADASYN(random_state=SEED)", style={"fontFamily": "monospace", "fontSize": "12px", "color": "var(--txt2)", "marginBottom": "8px"}),
-            _inline_note(
-                "Como SMOTE pero focaliza la generación en zonas de mayor dificultad de clasificación.",
-                "--purple", "--purple-lt"
-            ),
-        ]),
-
-        html.Div(className="card", style={"borderTop": "3px solid var(--amber)"}, children=[
-            html.Div(" weights", className="card-title"),
-            html.Div("Penalización por peso en el clasificador", className="card-sub"),
-            html.Div("balancer = 'weights'", style={"fontFamily": "monospace", "fontSize": "12px", "color": "var(--txt2)", "marginBottom": "8px"}),
-            _inline_note([
-                html.Strong("XGBoost: ", style={"color": "var(--amber)"}),
-                html.Code("scale_pos_weight = n_sin_fraude / n_con_fraude", style={"fontSize": "11px", "fontFamily": "monospace"}),
-                html.Br(),
-                html.Strong("RF / LR / SVC: ", style={"color": "var(--amber)"}),
-                html.Code("class_weight='balanced'", style={"fontSize": "11px", "fontFamily": "monospace"}),
-            ], "--amber", "--amber-lt"),
-        ]),
-    ]),
-
-    # ══════════════════════════════════════════════════════════════════════
-    # 5 · MODELOS E HIPERPARÁMETROS
-    # ══════════════════════════════════════════════════════════════════════
-    _section_title("", "Modelos e Hiperparámetros Optimizados",
-                   "Pipeline: preprocessor → [balancer] → classifier"),
-
-    html.Div(style={"display": "flex", "flexDirection": "column", "gap": "14px", "marginBottom": "28px"}, children=[
-
-        # XGBoost
-        html.Div(className="card", style={"borderLeft": "4px solid var(--accent)"}, children=[
-            html.Div(style={"display": "flex", "justifyContent": "space-between",
-                            "alignItems": "flex-start", "marginBottom": "14px"}, children=[
-                html.Div(children=[
-                    html.Div(" XGBoost — XGBClassifier", className="card-title", style={"fontSize": "15px"}),
-                    html.Div("tree_method='hist', device='cuda', eval_metric='logloss'", className="card-sub"),
-                ]),
-                html.Span("PR-AUC 0.952", style={
-                    "background": "var(--accent-lt)", "color": "var(--accent)",
-                    "borderRadius": "20px", "padding": "4px 12px", "fontSize": "12px", "fontWeight": "700",
-                }),
-            ]),
-            html.Div(style={"display": "grid", "gridTemplateColumns": "1fr 1fr", "gap": "14px"}, children=[
-                html.Div(children=[
-                    html.Div("Rango de búsqueda (base):", style={"fontSize": "11px", "color": "var(--txt2)", "fontWeight": "700", "textTransform": "uppercase", "letterSpacing": "0.4px", "marginBottom": "7px"}),
-                    html.Div(style={"display": "flex", "flexWrap": "wrap", "gap": "5px"}, children=[
-                        _chip(p, "--accent", "--accent-lt")
-                        for p in ["n_estimators ∈ [50,200]", "max_depth ∈ [3,6]",
-                                  "learning_rate ∈ [0.05,0.15]", "subsample ∈ [0.7,0.9]"]
-                    ]),
-                ]),
-                html.Div(children=[
-                    html.Div("Extra en variante weights:", style={"fontSize": "11px", "color": "var(--txt2)", "fontWeight": "700", "textTransform": "uppercase", "letterSpacing": "0.4px", "marginBottom": "7px"}),
-                    _chip("scale_pos_weight ∈ [4, n_neg/n_pos × 1.5]", "--amber", "--amber-lt"),
-                    html.Div("Fijos: reg_alpha=0.1, reg_lambda=1.0, colsample_bytree=0.8",
-                             style={"fontSize": "12px", "color": "var(--txt2)", "marginTop": "10px", "fontFamily": "monospace"}),
-                ]),
-            ]),
-        ]),
-
-        # Random Forest
-        html.Div(className="card", style={"borderLeft": "4px solid var(--teal)"}, children=[
-            html.Div(style={"display": "flex", "justifyContent": "space-between",
-                            "alignItems": "flex-start", "marginBottom": "12px"}, children=[
-                html.Div(children=[
-                    html.Div(" Random Forest — RandomForestClassifier", className="card-title", style={"fontSize": "15px"}),
-                    html.Div("class_weight='balanced' en variante weights", className="card-sub"),
-                ]),
-                html.Span("PR-AUC 0.966", style={
-                    "background": "var(--teal-lt)", "color": "var(--teal)",
-                    "borderRadius": "20px", "padding": "4px 12px", "fontSize": "12px", "fontWeight": "700",
-                }),
-            ]),
-            html.Div(style={"display": "flex", "flexWrap": "wrap", "gap": "5px"}, children=[
-                _chip(p, "--teal", "--teal-lt")
-                for p in ["n_estimators ∈ [50,300]", "max_depth ∈ {None,5,10,20}",
-                          "min_samples_split ∈ [2,20]", "min_samples_leaf ∈ [1,10]",
-                          "max_features ∈ {sqrt, log2}"]
-            ]),
-        ]),
-
-        # Regresión Logística
-        html.Div(className="card", style={"borderLeft": "4px solid var(--purple)"}, children=[
-            html.Div(style={"display": "flex", "justifyContent": "space-between",
-                            "alignItems": "flex-start", "marginBottom": "12px"}, children=[
-                html.Div(children=[
-                    html.Div(" Regresión Logística — solver='saga'", className="card-title", style={"fontSize": "15px"}),
-                    html.Div("Soporta L1 y L2 — class_weight='balanced' en variante weights", className="card-sub"),
-                ]),
-            ]),
-            html.Div(style={"display": "flex", "flexWrap": "wrap", "gap": "5px"}, children=[
-                _chip(p, "--purple", "--purple-lt")
-                for p in ["C ∈ [0.001,10] (log-uniforme)", "penalty ∈ {l1, l2}", "max_iter ∈ [500,2000]"]
-            ]),
-        ]),
-
-        # Naive Bayes
-        html.Div(className="card", style={"borderLeft": "4px solid var(--amber)"}, children=[
-            html.Div(style={"display": "flex", "justifyContent": "space-between",
-                            "alignItems": "flex-start", "marginBottom": "12px"}, children=[
-                html.Div(children=[
-                    html.Div(" Naive Bayes — GaussianNB (NaiveBayesChunked)", className="card-title", style={"fontSize": "15px"}),
-                    html.Div("Wrapper propio con partial_fit por bloques para eficiencia en memoria — no soporta class_weight", className="card-sub"),
-                ]),
-                html.Span("PR-AUC 0.175", style={
-                    "background": "var(--amber-lt)", "color": "var(--amber)",
-                    "borderRadius": "20px", "padding": "4px 12px", "fontSize": "12px", "fontWeight": "700",
-                }),
-            ]),
-            html.Div(style={"display": "flex", "flexWrap": "wrap", "gap": "5px"}, children=[
-                _chip(p, "--amber", "--amber-lt")
-                for p in ["var_smoothing ∈ [1e-12, 1e-6] (log-uniforme)", "chunk_size ∈ {5000, 10000, 20000}"]
-            ]),
-        ]),
-
-        # LinearSVC
-        html.Div(className="card", style={"borderLeft": "4px solid var(--coral)"}, children=[
-            html.Div(style={"display": "flex", "justifyContent": "space-between",
-                            "alignItems": "flex-start", "marginBottom": "12px"}, children=[
-                html.Div(children=[
-                    html.Div(" LinearSVC + CalibratedClassifierCV (cv=3)", className="card-title", style={"fontSize": "15px"}),
-                    html.Div("Calibrado para obtener predict_proba — class_weight='balanced' en variante weights", className="card-sub"),
-                ]),
-                html.Span("PR-AUC 0.684", style={
-                    "background": "var(--amber-lt)", "color": "var(--coral)",
-                    "borderRadius": "20px", "padding": "4px 12px", "fontSize": "12px", "fontWeight": "700",
-                }),
-            ]),
-            html.Div(style={"display": "flex", "flexWrap": "wrap", "gap": "5px"}, children=[
-                _chip(p, "--coral", "--amber-lt")
-                for p in ["estimator__C ∈ [0.001,10] (log-uniforme)", "estimator__max_iter ∈ [1000,5000]"]
-            ]),
-        ]),
-    ]),
 
     # ══════════════════════════════════════════════════════════════════════
     # 6 · TABLA RESULTADOS CSV
@@ -597,12 +299,12 @@ layout = html.Div(className="page-content", children=[
     _section_title("", "Tabla de Resultados", "Métricas y tiempo de cada modelo"),
 
     html.Div(className="card", style={"marginBottom": "28px"}, children=[
-        html.Div("Métricas en test set por modelo y técnica de balanceo", className="card-title"),
+        html.Div("Métricas en validation y test set por modelo y técnica de balanceo", className="card-title"),
         html.Div("Haz clic en los encabezados para ordenar · Escribe en los campos para filtrar", className="card-sub"),
         html.Div(style={"marginTop": "12px"}, children=[_build_csv_table()]),
     ]),
     
-    # ══════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════
 # 6.5 · MEJORES HIPERPARÁMETROS
 # ══════════════════════════════════════════════════════════════════════
     _section_title("", "Mejores Hiperparámetros por Modelo",
@@ -619,7 +321,7 @@ layout = html.Div(className="page-content", children=[
                     "borderRadius": "20px", "padding": "3px 12px", "fontSize": "11px", "fontWeight": "700",
                 }),
             ]),
-            _params_table(df_params, "XGBoost", {
+            _params_table(df_params, "XGBoost_hist", {
                 "classifier__learning_rate":    "learning_rate",
                 "classifier__max_depth":        "max_depth",
                 "classifier__n_estimators":     "n_estimators",
@@ -639,10 +341,26 @@ layout = html.Div(className="page-content", children=[
             ]),
             _params_table(df_params, "Random_Forest", {
                 "classifier__n_estimators":      "n_estimators",
-                "classifier__max_depth":         "max_depth",
+                #"classifier__max_depth":         "max_depth",
                 "classifier__max_features":      "max_features",
                 "classifier__min_samples_leaf":  "min_samples_leaf",
                 "classifier__min_samples_split": "min_samples_split",
+            }),
+        ]),
+
+        # Logistic Regression
+        html.Div(className="card", style={"borderLeft": "4px solid var(--purple, #8b5cf6)"}, children=[
+            html.Div(style={"display": "flex", "alignItems": "center", "gap": "10px", "marginBottom": "14px"}, children=[
+                html.Div("Logistic Regression", className="card-title", style={"fontSize": "15px", "margin": "0"}),
+                html.Span("PR-AUC 0.679", style={
+                    "background": "var(--accent-lt)", "color": "var(--purple, #8b5cf6)",
+                    "borderRadius": "20px", "padding": "3px 12px", "fontSize": "11px", "fontWeight": "700",
+                }),
+            ]),
+            _params_table(df_params, "Logistic_Regression", {
+                "classifier__max_iter": "max_iter",
+                "classifier__C":       "C",
+                "classifier__penalty": "penalty",
             }),
         ]),
 
@@ -656,6 +374,7 @@ layout = html.Div(className="page-content", children=[
                 }),
             ]),
             _params_table(df_params, "LinearSVC", {
+                
                 "classifier__estimator__C":        "C",
                 "classifier__estimator__max_iter": "max_iter",
             }),
@@ -671,13 +390,13 @@ layout = html.Div(className="page-content", children=[
                 }),
             ]),
             _params_table(df_params, "Naive_Bayes", {
+                'classifier__chunk_size': "chunk_size",
                 "classifier__var_smoothing": "var_smoothing",
-                "classifier__chunk_size":    "chunk_size",
             }),
         ]),
     ]),
 
-    # ══════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════
     # 7 · COMPARACIÓN ESTADÍSTICA
     # ══════════════════════════════════════════════════════════════════════
     _section_title("", "Comparación Estadística de Modelos",
@@ -697,7 +416,7 @@ layout = html.Div(className="page-content", children=[
             _inline_note([
                 html.Strong("Resultado clave: ", style={"color": "var(--accent)"}),
                 "Random Forest y XGBoost no difieren significativamente (p = 0.922). "
-                "Ambos superan a Naive Bayes y LinearSVC con p < 0.001.",
+                "Ambos superan a Naive Bayes, LinearSVC y Logistic Regression con p < 0.001.",
             ]),
         ]),
 
@@ -716,14 +435,16 @@ layout = html.Div(className="page-content", children=[
                 ]),
                 html.Div(style={"display": "flex", "alignItems": "flex-start", "gap": "8px"}, children=[
                     html.Div(style={"width": "8px", "height": "8px", "borderRadius": "50%",
-                                    "background": "var(--red)", "flexShrink": "0", "marginTop": "5px"}),
-                    html.Span("Naive Bayes: PR-AUC 0.175 — el supuesto de independencia entre features no se cumple en datos de fraude.",
+                                    "background": "var(--amber)", "flexShrink": "0", "marginTop": "5px"}),
+                    html.Span("Logistic Regression y LinearSVC: PR-AUC 0.679 y 0.684 — rendimiento moderado, "
+                              "fronteras de decisión lineales insuficientes para capturar la complejidad del fraude.",
                               style={"fontSize": "12px", "color": "var(--txt2)", "lineHeight": "1.5"}),
                 ]),
                 html.Div(style={"display": "flex", "alignItems": "flex-start", "gap": "8px"}, children=[
                     html.Div(style={"width": "8px", "height": "8px", "borderRadius": "50%",
-                                    "background": "var(--amber)", "flexShrink": "0", "marginTop": "5px"}),
-                    html.Span("LinearSVC: PR-AUC 0.684 — rendimiento moderado, descartado frente a los ensambles.",
+                                    "background": "var(--red)", "flexShrink": "0", "marginTop": "5px"}),
+                    html.Span("Naive Bayes: PR-AUC 0.186 — el supuesto de independencia entre features "
+                              "no se cumple en datos de fraude.",
                               style={"fontSize": "12px", "color": "var(--txt2)", "lineHeight": "1.5"}),
                 ]),
             ]),
@@ -781,7 +502,7 @@ layout = html.Div(className="page-content", children=[
         ]),
     ]),
 
-    # ══════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════
     # 9 · CONCLUSIÓN Y ELECCIÓN
     # ══════════════════════════════════════════════════════════════════════
     _section_title("", "Conclusión y Elección del Modelo",
@@ -791,9 +512,9 @@ layout = html.Div(className="page-content", children=[
 
         # Hero card
         html.Div(style={
-            "background": "linear-gradient(135deg, #ff6584 0%, #ff9aab 100%)",
+            "background": "linear-gradient(135deg, #2563eb 0%, #60a5fa 100%)",
             "borderRadius": "var(--r)", "padding": "28px 32px", "color": "#fff",
-            "boxShadow": "0 8px 28px rgba(255,101,132,0.38)",
+            "boxShadow": "0 8px 28px rgba(37,99,235,0.38)",
             "marginBottom": "16px", "position": "relative", "overflow": "hidden",
         }, children=[
             html.Div(style={
@@ -820,13 +541,18 @@ layout = html.Div(className="page-content", children=[
                               "tree_method='hist' + CUDA", "p-valor vs RF = 0.922"]
                 ]),
                 html.P(
-                    "Tras evaluar cinco algoritmos bajo diversas estrategias de balanceo sobre un dataset de 657,943 registros "
-                    "con un desbalanceo extremo del 0.3%, se determinó que la estrategia sin balanceo artificial ofrece el mejor "
-                    "rendimiento real. Aunque técnicas como SMOTE o pesos por clase incrementan el Recall, lo hacen a costa de "
-                    "una pérdida masiva de precisión que invalidaría el sistema en un entorno de producción. El modelo XGBoost "
-                    "fue seleccionado como la solución óptima para el despliegue debido a que la diferencia en el ROC-AUC frente "
-                    "a Random Forest resultó estadísticamente no significativa (p=0.922), pero con una eficiencia computacional "
-                    "diez veces superior. Además, se consideró este modelo por lo siguiente:",
+                    "Se evaluaron cinco algoritmos (XGBoost, Random Forest, Logistic Regression, LinearSVC y Naive Bayes) "
+                    "bajo cuatro estrategias de balanceo sobre un dataset de 657,943 registros con un desbalanceo extremo "
+                    "del 0.3%. La estrategia sin balanceo artificial dominó consistentemente en PR-AUC test en todos los "
+                    "modelos: SMOTE, ADASYN y class weights incrementaron el Recall hacia valores cercanos a 1.0, pero a "
+                    "costa de una pérdida masiva de precisión que haría inoperativo cualquier sistema de alertas en "
+                    "producción. El ROC-AUC de 0.9998 fue validado y es técnicamente legítimo: la diferencia entre CV y "
+                    "test es nula, el experimento sin las variables frecuencia y pais_destino lo redujo a 0.95 descartando "
+                    "fuga de datos, y se mantiene estable bajo todos los esquemas de balanceo. XGBoost fue seleccionado "
+                    "sobre Random Forest (PR-AUC 0.9659) porque la diferencia en ROC-AUC resultó estadísticamente no "
+                    "significativa (p=0.922), pero con una eficiencia computacional casi diez veces superior. "
+                    "Logistic Regression (0.6792), LinearSVC (0.6844) y Naive Bayes (0.1864) fueron descartados por "
+                    "rendimiento significativamente inferior (p=0.000). Se considera este modelo por lo siguiente:",
                     style={"fontSize": "14px", "lineHeight": "1.8", "opacity": "0.93", "margin": "0"},
                 ),
             ]),
@@ -839,39 +565,49 @@ layout = html.Div(className="page-content", children=[
         }, children=[
             html.Div(className="card", style={"borderTop": "3px solid var(--accent)"}, children=[
                 html.Div("Eficiencia GPU", className="card-title"),
-                html.P("El uso de tree_method='hist' junto con device='cuda' permite aprovechar los nucleos de una tarjeta gráfica NVIDIA. Esto reduce el tiempo de ejecución a solo 55.8 segundos, logrando una velocidad casi diez veces superior a la de Random Forest (535.3s).",
+                html.P("El uso de tree_method='hist' junto con device='cuda' permite aprovechar los núcleos de una "
+                       "tarjeta gráfica NVIDIA. Esto reduce el tiempo de ejecución a solo 115.8 segundos, logrando "
+                       "una velocidad casi diez veces superior a la de Random Forest (1361.9s) bajo la misma configuración.",
                        style={"fontSize": "13px", "color": "var(--txt2)", "lineHeight": "1.6"}),
             ]),
             html.Div(className="card", style={"borderTop": "3px solid var(--teal)"}, children=[
                 html.Div("Regularización nativa", className="card-title"),
-                html.P("reg_alpha (L1) y reg_lambda (L2) ya incorporados en el objetivo, sin necesidad de pasos adicionales en el pipeline.",
+                html.P("reg_alpha (L1) y reg_lambda (L2) ya incorporados en el objetivo de optimización, "
+                       "sin necesidad de pasos adicionales en el pipeline. Esto reduce el riesgo de sobreajuste "
+                       "de forma transparente durante el entrenamiento.",
                        style={"fontSize": "13px", "color": "var(--txt2)", "lineHeight": "1.6"}),
             ]),
             html.Div(className="card", style={"borderTop": "3px solid var(--purple)"}, children=[
                 html.Div("Desbalanceo integrado", className="card-title"),
-                html.P("Mediante el parámetro scale_pos_weight, el modelo ajusta internamente el peso de la clase minoritaria (0.3% de fraude). Esto penaliza con mayor rigor los errores en los casos positivos, optimizando el rendimiento sin sufrir la degradación de precisión observada con SMOTE o ADASYN.",
+                html.P("Mediante scale_pos_weight, el modelo ajusta internamente el peso de la clase minoritaria "
+                       "(0.3% de fraude). A diferencia de SMOTE o ADASYN, que degradaron la precisión hasta valores "
+                       "del 2-5%, la configuración sin balanceo con XGBoost mantuvo una precisión de 0.9357 con "
+                       "un recall de 0.7923.",
                        style={"fontSize": "13px", "color": "var(--txt2)", "lineHeight": "1.6"}),
             ]),
             html.Div(className="card", style={"borderTop": "3px solid var(--amber)"}, children=[
                 html.Div("Interpretabilidad", className="card-title"),
-                html.P("El modelo ofrece soporte nativo para SHAP y LIME, permitiendo auditar cada alerta de fraude de forma individual. El análisis confirmó que el país de destino y el tipo de transacción son los principales predictores, otorgando transparencia total al proceso de decisión.",
+                html.P("El modelo ofrece soporte nativo para SHAP y LIME, permitiendo auditar cada alerta de fraude "
+                       "de forma individual. El análisis con LIME confirmó que pais_destino_W0 y tipo_trx son los "
+                       "principales predictores, con la frecuencia como señal secundaria y el monto con menor peso "
+                       "relativo, otorgando transparencia total al proceso de decisión.",
                        style={"fontSize": "13px", "color": "var(--txt2)", "lineHeight": "1.6"}),
             ]),
         ]),
-        
+
         html.Div(style={
             "marginTop": "40px",
             "marginBottom": "60px",
             "padding": "20px",
             "borderRadius": "12px",
-            "background": "rgba(var(--accent-rgb), 0.05)",  # Fondo muy suave del color de acento
-            "border": "1px dashed var(--accent)",           # Borde discontinuo para un toque técnico
+            "background": "rgba(37,99,235,0.05)",
+            "border": "1px dashed #2563eb",
             "display": "flex",
             "alignItems": "center",
             "justifyContent": "center",
             "gap": "10px"
         }, children=[
-            html.Span("", style={"fontSize": "18px"}), 
+            html.Span("", style={"fontSize": "18px"}),
             html.P([
                 "Documentación técnica completa del modelado disponible en: ",
                 html.A(
@@ -887,15 +623,11 @@ layout = html.Div(className="page-content", children=[
                     }
                 ),
             ], style={
-                "fontSize": "14px", 
-                "color": "var(--txt)", 
+                "fontSize": "14px",
+                "color": "var(--txt)",
                 "margin": "0",
                 "fontWeight": "500"
             }),
         ]),
-        
-        
-        
-        
     ]),
 ])
