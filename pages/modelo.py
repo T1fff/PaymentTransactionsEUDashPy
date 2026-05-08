@@ -471,7 +471,6 @@ layout = html.Div([
                 html.Div(
                     id="pred-detail-inner",
                     children=html.Div([
-                        html.Div("🔍", style={"fontSize": "28px", "marginBottom": "8px"}),
                         html.P("Haz clic en Analizar", style={
                             "fontSize": "13px", "fontWeight": "600",
                             "color": DARK, "margin": "0 0 4px 0",
