@@ -384,17 +384,17 @@ layout = html.Div([
                 "fontFamily": FONT_D, "fontSize": "14px",
                 "fontWeight": "700", "color": DARK, "marginBottom": "16px",
             }),
-            html.Div([lbl("Frecuencia"),      ddrop("fr-frec",  FRECUENCIA_OPTS,   "A")],   style={"marginBottom": "10px"}),
-            html.Div([lbl("País Origen"),      ddrop("fr-orig",  PAIS_ORIGEN_OPTS,  "DE")],  style={"marginBottom": "10px"}),
+            html.Div([lbl("Frecuencia"),      ddrop("fr-frec",  FRECUENCIA_OPTS,   "H")],   style={"marginBottom": "10px"}),
+            html.Div([lbl("País Origen"),      ddrop("fr-orig",  PAIS_ORIGEN_OPTS,  "LU")],  style={"marginBottom": "10px"}),
             html.Div([lbl("País Destino"),     ddrop("fr-dest",  PAIS_DESTINO_OPTS, "W0")],  style={"marginBottom": "10px"}),
-            html.Div([lbl("Tipo Transacción"), ddrop("fr-tipo",  TIPO_TRX_OPTS,     "CP0")], style={"marginBottom": "10px"}),
+            html.Div([lbl("Tipo Transacción"), ddrop("fr-tipo",  TIPO_TRX_OPTS,     "EMP0")], style={"marginBottom": "10px"}),
             html.Div([lbl("PSP"),              ddrop("fr-psp",   TIPO_PSP_OPTS,     "1")],   style={"marginBottom": "10px"}),
             html.Div([lbl("Unidad"),           ddrop("fr-unit",  UNIDAD_OPTS,       "EUR")], style={"marginBottom": "10px"}),
             html.Div([lbl("Tipo Monto"),       ddrop("fr-tmonto",TIPO_MONTO_OPTS,   "A")],   style={"marginBottom": "10px"}),
             html.Div([
-                lbl("Monto Final (€)"),
+                lbl("Cantidad"),
                 dcc.Input(
-                    id="fr-monto", type="number", value=500, min=0,
+                    id="fr-monto", type="number", value=0.3, min=0,
                     style={
                         "width": "100%", "padding": "7px 10px",
                         "borderRadius": "8px", "border": f"1.5px solid {BORDER}",
